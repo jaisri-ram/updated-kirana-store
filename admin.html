@@ -872,7 +872,7 @@ function handleImageUpload(input) {
       const TARGET_BYTES = 20 * 1024;        // 20 KB binary target
       const TARGET_B64   = TARGET_BYTES * 1.37; // ~27 KB base64
 
-      let quality = 0.85;
+      let quality = 0.90;
       let base64 = canvas.toDataURL("image/jpeg", quality);
 
       while (base64.length > TARGET_B64 && quality > 0.05) {
