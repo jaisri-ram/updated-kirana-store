@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jai Sri Ram Grocery Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron: #FF6B00;
+    --saffron-light: #FF8C3A;
+    --saffron-glow: rgba(255,107,0,0.15);
+    --green: #2E7D32;
+    --green-light: #43A047;
+    --cream: #FFF8F0;
+    --warm-white: #FFFDF9;
+    --text-dark: #1A1208;
+    --text-mid: #4A3728;
+    --text-soft: #8D6E63;
+    --border: #F0E0D0;
+    --card-shadow: 0 4px 24px rgba(255,107,0,0.08);
+    --card-shadow-hover: 0 8px 32px rgba(255,107,0,0.18);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  .telugu { font-family: 'Noto Sans Telugu', sans-serif; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #FF6B00 0%, #E65100 60%, #BF360C 100%);
+    padding: 20px 16px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -30px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+  }
+  .store-icon {
+    font-size: 42px;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+  }
+  .store-name {
+    font-family: 'Baloo 2', cursive;
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .store-name-telugu {
+    font-family: 'Noto Sans Telugu', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    margin-top: 2px;
+  }
+  .store-tagline {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* CART BUBBLE */
+  .cart-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 20px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(46,125,50,0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    z-index: 999;
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  .cart-fab.visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .cart-fab:hover { background: var(--green-light); box-shadow: 0 6px 28px rgba(46,125,50,0.5); }
+  .cart-count {
+    background: #fff;
+    color: var(--green);
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  /* SEARCH */
+  .search-bar {
+    padding: 16px;
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .search-input {
+    width: 100%;
+    padding: 12px 16px 12px 42px;
+    border: 2px solid var(--border);
+    border-radius: 50px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    outline: none;
+    transition: border 0.2s;
+  }
+  .search-input:focus { border-color: var(--saffron); }
+  .search-wrap { position: relative; }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; }
+
+  /* CATEGORIES */
+  .categories {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--border);
+  }
+  .categories::-webkit-scrollbar { display: none; }
+  .cat-chip {
+    padding: 6px 16px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    color: var(--text-mid);
+  }
+  .cat-chip.active {
+    background: var(--saffron);
+    border-color: var(--saffron);
+    color: white;
+    box-shadow: 0 2px 10px rgba(255,107,0,0.3);
+  }
+
+  /* PRODUCTS GRID */
+  .products-section { padding: 16px; }
+  .section-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title span.telugu { font-size: 14px; color: var(--text-soft); font-weight: 400; }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* PRODUCT CARD */
+  .product-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+    border: 1.5px solid var(--border);
+    animation: fadeUp 0.4s ease both;
+  }
+  .product-card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(16px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+  .product-img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+  }
+  .product-body { padding: 10px 10px 12px; }
+  .product-name {
+    font-family: 'Baloo 2', cursive;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.2;
+  }
+  .product-name-tel {
+    font-family: 'Noto Sans Telugu', sans-serif;
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-top: 1px;
+  }
+  .product-unit {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-top: 3px;
+  }
+  .product-price {
+    font-family: 'Baloo 2', cursive;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--saffron);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .product-price span { font-size: 12px; font-weight: 400; color: var(--text-soft); }
+  .price-mrp {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-soft);
+    text-decoration: line-through;
+  }
+  .price-discount {
+    font-size: 10px;
+    font-weight: 700;
+    background: #E8F5E9;
+    color: #2E7D32;
+    padding: 2px 6px;
+    border-radius: 50px;
+  }
+
+  /* QTY VARIANT CHIPS */
+  .qty-variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 7px;
+    margin-bottom: 4px;
+  }
+  .qty-chip {
+    padding: 4px 10px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-mid);
+    transition: all 0.15s;
+  }
+  .qty-chip.selected {
+    background: var(--saffron);
+    border-color: var(--saffron);
+    color: white;
+  }
+
+  /* QTY CONTROLS */
+  .qty-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .qty-btn {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .qty-minus { background: var(--border); color: var(--text-mid); }
+  .qty-minus:hover { background: #ddd; }
+  .qty-plus { background: var(--saffron); color: white; }
+  .qty-plus:hover { background: var(--saffron-light); }
+  .qty-num {
+    font-family: 'Baloo 2', cursive;
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 28px;
+    text-align: center;
+  }
+  .add-btn {
+    width: 100%;
+    padding: 8px;
+    background: var(--saffron-glow);
+    border: 1.5px solid var(--saffron);
+    color: var(--saffron);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Baloo 2', cursive;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .add-btn:hover, .add-btn.added {
+    background: var(--saffron);
+    color: white;
+  }
+  .add-btn.added { background: var(--green); border-color: var(--green); }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--saffron);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text-soft); font-size: 14px; }
+
+  /* CART DRAWER */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+
+  .cart-drawer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    z-index: 1001;
+    max-height: 92vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+    padding: 0 0 32px;
+  }
+  .cart-drawer.open { transform: translateY(0); }
+
+  .drawer-handle {
+    width: 40px; height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .drawer-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 20px;
+    font-weight: 800;
+  }
+  .close-btn {
+    background: var(--border);
+    border: none;
+    border-radius: 50%;
+    width: 32px; height: 32px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* CART ITEMS */
+  .cart-items { padding: 12px 20px; }
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cart-item-emoji { font-size: 28px; }
+  .cart-item-info { flex: 1; }
+  .cart-item-name { font-weight: 600; font-size: 14px; }
+  .cart-item-price { font-size: 12px; color: var(--text-soft); }
+  .cart-item-controls {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ci-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ci-minus { background: var(--border); color: var(--text-mid); }
+  .ci-plus { background: var(--saffron); color: white; }
+  .ci-qty { font-weight: 700; min-width: 20px; text-align: center; font-size: 15px; }
+  .ci-del {
+    background: none;
+    border: none;
+    color: #e53935;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+  }
+  .cart-total {
+    margin: 12px 20px;
+    background: var(--saffron-glow);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cart-total-label { font-size: 14px; color: var(--text-mid); }
+  .cart-total-amount {
+    font-family: 'Baloo 2', cursive;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--saffron);
+  }
+  .empty-cart {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-soft);
+  }
+  .empty-cart .emoji { font-size: 48px; margin-bottom: 12px; }
+
+  /* ORDER FORM */
+  .order-form { padding: 0 20px; }
+  .form-section-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 16px 0 10px;
+    color: var(--text-dark);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .form-group { margin-bottom: 10px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-soft);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-dark);
+    background: var(--cream);
+    outline: none;
+    transition: border 0.2s;
+  }
+  .form-input:focus, .form-textarea:focus { border-color: var(--saffron); }
+  .form-textarea { resize: vertical; min-height: 70px; }
+  .form-note {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-top: 4px;
+  }
+
+  .place-order-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #2E7D32, #43A047);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 4px 16px rgba(46,125,50,0.3);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .place-order-btn:hover { box-shadow: 0 6px 24px rgba(46,125,50,0.45); transform: translateY(-1px); }
+  .place-order-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* SUCCESS */
+  .success-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .success-screen.show { display: flex; }
+  .success-icon { font-size: 64px; animation: pop 0.4s ease; }
+  @keyframes pop {
+    0% { transform: scale(0); } 80% { transform: scale(1.15); } 100% { transform: scale(1); }
+  }
+  .success-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--green);
+    margin-top: 16px;
+  }
+  .success-subtitle { color: var(--text-soft); font-size: 14px; margin-top: 8px; line-height: 1.5; }
+  .success-tel { font-family: 'Noto Sans Telugu', sans-serif; font-size: 14px; color: var(--text-soft); margin-top: 4px; }
+  .new-order-btn {
+    margin-top: 24px;
+    padding: 12px 32px;
+    background: var(--saffron);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .no-items {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-soft);
+    font-size: 14px;
+  }
+
+  
+.shop-banner {
+  width: 100%;
+  background: #ffffff;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.banner-content {
+  display: inline-block;
+  color: #2E7D32;
+  font-size: 14px;
+  font-weight: 600;
+  padding-left: 100%;
+  animation: scroll-left-right 30s linear infinite;
+}
+
+@keyframes scroll-left-right {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+  .shop-banner.visible { display: block; }
+  .banner-close {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.2); border: none; color: white;
+    border-radius: 50%; width: 22px; height: 22px; font-size: 13px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+
+  /* CONFIG BANNER */
+  .config-banner {
+    background: #FFF3E0;
+    border: 1.5px dashed var(--saffron);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 16px;
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+  .config-banner strong { color: var(--saffron); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="store-icon">🏪</div>
+  <div class="store-name">Jai Sri Ram Grocery Store</div>
+  <div class="store-name-telugu telugu">జై శ్రీ రామ్ కిరాణా దుకాణం</div>
+  <div class="store-tagline">Fresh • Quality • Delivered to You</div>
+</header>
+
+<!-- SEARCH -->
+<div class="search-bar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="Search items... వస్తువులు వెతకండి" oninput="filterProducts()">
+  </div>
+</div>
+
+<!-- BANNER -->
+<div class="shop-banner" id="shopBanner">
+  <div class="banner-content" id="banner-content"></div>
+  <button class="banner-close" onclick="document.getElementById('shopBanner').classList.remove('visible')" title="Close">✕</button>
+</div>
+
+<!-- CATEGORIES -->
+<div class="categories" id="categoriesBar"></div>
+
+<!-- PRODUCTS -->
+<div class="products-section">
+  <div class="section-title">
+    Our Items <span class="telugu">మా వస్తువులు</span>
+  </div>
+  <div id="productsGrid" class="products-grid">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading items... వస్తువులు లోడ్ అవుతున్నాయి</div>
+    </div>
+  </div>
+</div>
+
+<!-- CART FAB -->
+<button class="cart-fab" id="cartFab" onclick="openCart()">
+  🛒 View Cart <span class="cart-count" id="cartCount">0</span>
+</button>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+
+<!-- CART DRAWER -->
+<div class="cart-drawer" id="cartDrawer">
+  <div class="drawer-handle"></div>
+
+  <!-- Normal cart view -->
+  <div id="cartContent">
+    <div class="drawer-header">
+      <div class="drawer-title">🛒 Your Cart <span class="telugu" style="font-size:14px;color:var(--text-soft);font-weight:400;"> మీ కార్ట్</span></div>
+      <button class="close-btn" onclick="closeCart()">✕</button>
+    </div>
+
+    <div class="cart-items" id="cartItemsList"></div>
+    <div class="cart-total" id="cartTotal" style="display:none">
+      <div>
+        <div class="cart-total-label">Total Amount</div>
+        <div class="telugu" style="font-size:11px;color:var(--text-soft)">మొత్తం మొత్తం</div>
+      </div>
+      <div class="cart-total-amount" id="totalAmount">₹0</div>
+    </div>
+
+    <div class="order-form" id="orderFormSection" style="display:none">
+      <div class="form-section-title">📦 Delivery Details <span class="telugu" style="font-size:13px;color:var(--text-soft);font-weight:400;">డెలివరీ వివరాలు</span></div>
+      <div class="form-group">
+        <label class="form-label">Your Name / మీ పేరు *</label>
+        <input class="form-input" id="custName" type="text" placeholder="Enter your name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number / ఫోన్ నంబర్ *</label>
+        <input class="form-input" id="custPhone" type="tel" placeholder="10-digit mobile number" maxlength="10">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Delivery Address / డెలివరీ చిరునామా *</label>
+        <textarea class="form-textarea" id="custAddress" placeholder="House No, Street, Landmark, Area..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Special Notes / ప్రత్యేక గమనికలు</label>
+        <input class="form-input" id="custNotes" type="text" placeholder="Any special instructions (optional)">
+      </div>
+      <p class="form-note">💳 Payment on delivery. Cash accepted. / డెలివరీ సమయంలో చెల్లింపు.</p>
+      <button class="place-order-btn" id="placeOrderBtn" onclick="placeOrder()">
+        ✅ Place Order / ఆర్డర్ పెట్టండి
+      </button>
+    </div>
+  </div>
+
+  <!-- Success screen -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Order Placed!</div>
+    <div class="success-subtitle">Your order has been received. We'll deliver soon and collect payment on delivery.</div>
+    <div class="success-tel telugu">మీ ఆర్డర్ అందుకోబడింది. మేము త్వరలో డెలివరీ చేస్తాము.</div>
+    <button class="new-order-btn" onclick="newOrder()">🛒 New Order / కొత్త ఆర్డర్</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ⚠️  CONFIGURATION — Change this after setting up Apps Script
+// ============================================================
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVsJX5ZOgLcPSE09tUj1oQ3YYfSSqW8P8W03itJ5df2-XzcEx5HeXco_HsHbDsZZ7u/exec";
+// ============================================================
+
+let allProducts = [];
+let cart = {}; // { productId: { ...product, qty } }
+let activeCategory = "All";
+
+// ---- DEMO DATA (shown if Apps Script not set up yet) ----
+const DEMO_PRODUCTS = [
+  {id:"1",name:"Basmati Rice",nameTel:"బాస్మతి బియ్యం",category:"Grains",price:85,mrp:100,unit:"per kg",imageUrl:"",qtyOptions:"500g, 1kg, 2kg"},
+  {id:"2",name:"Toor Dal",nameTel:"కందిపప్పు",category:"Pulses",price:120,mrp:130,unit:"per kg",imageUrl:"",qtyOptions:"250g, 500g, 1kg"},
+  {id:"3",name:"Sunflower Oil",nameTel:"పొద్దుతిరుగుడు నూనె",category:"Oils",price:130,mrp:145,unit:"per litre",imageUrl:"",qtyOptions:"500ml, 1L, 2L"},
+  {id:"4",name:"Sugar",nameTel:"చక్కెర",category:"Essentials",price:45,mrp:"",unit:"per kg",imageUrl:"",qtyOptions:""},
+  {id:"5",name:"Salt",nameTel:"ఉప్పు",category:"Essentials",price:20,mrp:"",unit:"per kg",imageUrl:"",qtyOptions:""},
+];
+
+async function fetchProducts() {
+  if (APPS_SCRIPT_URL == "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
+    allProducts = DEMO_PRODUCTS;
+    showConfigBanner();
+    renderCategories();
+    renderProducts(allProducts);
+    return;
+  }
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getProducts`);
+    const data = await res.json();
+    allProducts = (data.products || []);
+    renderCategories();
+    renderProducts(allProducts);
+  } catch(e) {
+    document.getElementById("productsGrid").innerHTML =
+      `<div class="no-items">⚠️ Could not load items. Please check your connection.<br><br><span class="telugu">వస్తువులు లోడ్ కాలేదు. మళ్ళీ ప్రయత్నించండి.</span></div>`;
+  }
+}
+
+function showConfigBanner() {
+  const sec = document.querySelector('.products-section');
+  const banner = document.createElement('div');
+  banner.className = 'config-banner';
+  banner.innerHTML = `⚙️ <strong>Demo Mode:</strong> Connect your Google Sheets to show real products. See <strong>setup-guide.html</strong> for instructions. / <span class="telugu">డెమో మోడ్ లో ఉంది. అసలు వస్తువులు చూపించడానికి Google Sheets జోడించండి.</span>`;
+  sec.insertBefore(banner, sec.firstChild);
+}
+
+function getCategories() {
+  const cats = ["All", ...new Set(allProducts.map(p => p.category).filter(Boolean))];
+  return cats;
+}
+
+function renderCategories() {
+  const bar = document.getElementById("categoriesBar");
+  bar.innerHTML = getCategories().map(c =>
+    `<button class="cat-chip ${c == activeCategory ? 'active' : ''}" onclick="selectCategory('${c}')">${c}</button>`
+  ).join('');
+}
+
+function selectCategory(cat) {
+  activeCategory = cat;
+  renderCategories();
+  filterProducts();
+}
+
+function filterProducts() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  let items = allProducts;
+  if (activeCategory !== "All") items = items.filter(p => p.category == activeCategory);
+  if (q) items = items.filter(p =>
+    p.name.toLowerCase().includes(q) || (p.nameTel || "").includes(q)
+  );
+  renderProducts(items);
+}
+
+function renderProducts(items) {
+  const grid = document.getElementById("productsGrid");
+  if (!items.length) {
+    grid.innerHTML = `<div class="no-items" style="grid-column:1/-1">😔 No items found.<br><span class="telugu">వస్తువులు కనుగొనబడలేదు.</span></div>`;
+    return;
+  }
+  grid.innerHTML = items.map((p, i) => {
+    const inCart = cart[p.id];
+    const qty = inCart ? inCart.qty : 0;
+
+    // Image or fallback
+    const imgContent = p.imageUrl
+      ? `<img src="${p.imageUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='🛒'">`
+      : (p.emoji || '🛒');
+
+    // MRP / offer price display — will be dynamically updated by selectVariant
+    const hasMrp = p.mrp && parseFloat(p.mrp) > parseFloat(p.price);
+    const discountPct = hasMrp ? Math.round((1 - parseFloat(p.price) / parseFloat(p.mrp)) * 100) : 0;
+    const priceHtml = hasMrp
+      ? `<div class="product-price" id="price-display-${p.id}">
+           ₹${p.price}
+           <span class="price-mrp">₹${p.mrp}</span>
+           <span class="price-discount">↓${discountPct}% OFF</span>
+         </div>`
+      : `<div class="product-price" id="price-display-${p.id}">₹${p.price} <span>/ ${p.unit || 'unit'}</span></div>`;
+
+    // Quantity variant chips
+    const variants = p.qtyOptions ? p.qtyOptions.split(',').map(v => v.trim()).filter(Boolean) : [];
+    const variantsHtml = variants.length > 1
+      ? `<div class="qty-variants" id="variants-${p.id}" data-variant-price="${p.price}" data-variant-mrp="${p.mrp||''}" data-variant-label="${variants[0]}">
+          ${variants.map((v, vi) => `<button class="qty-chip${vi === 0 ? ' selected' : ''}" onclick="selectVariant('${p.id}', ${vi})" data-vi="${vi}">${v}</button>`).join('')}
+         </div>`
+      : '';
+
+    // Qty counter (numeric +/- for simple qty, shown below variants)
+    const qtyControls = `
+      <div class="qty-controls">
+        <button class="qty-btn qty-minus" onclick="changeLocalQty('${p.id}', -1)">−</button>
+        <span class="qty-num" id="qty-${p.id}">${qty}</span>
+        <button class="qty-btn qty-plus" onclick="changeLocalQty('${p.id}', 1)">+</button>
+      </div>
+      <button class="add-btn ${qty > 0 ? 'added' : ''}" id="addbtn-${p.id}" onclick="addToCart('${p.id}')">
+        ${qty > 0 ? '✅ Added / జోడించబడింది' : '+ Add to Cart / కార్ట్ కు జోడించు'}
+      </button>`;
+
+    return `
+    <div class="product-card" style="animation-delay:${i * 0.05}s">
+      <div class="product-img">${imgContent}</div>
+      <div class="product-body">
+        <div class="product-name">${p.name}</div>
+        ${p.nameTel ? `<div class="product-name-tel">${p.nameTel}</div>` : ''}
+        <div class="product-unit">${p.unit || ''}</div>
+        ${priceHtml}
+        ${variantsHtml}
+        ${qtyControls}
+      </div>
+    </div>`;
+  }).join('');
+
+  // After render: trigger first-variant price calculation for each product
+  items.forEach(p => {
+    if (p.qtyOptions && p.qtyOptions.split(',').filter(Boolean).length > 1) {
+      selectVariant(String(p.id), 0);
+    }
+  });
+}
+
+/**
+ * Parse a variant string like "500g", "1kg", "250ml", "2L", "1 piece"
+ * and return a multiplier relative to the product's base unit.
+ * e.g. base unit "per kg", variant "500g" → 0.5
+ *      base unit "per litre", variant "500ml" → 0.5
+ *      base unit "per kg", variant "2kg" → 2
+ *      unrecognised → 1 (no change)
+ */
+function parseVariantMultiplier(variantStr, baseUnit) {
+  const v = variantStr.trim().toLowerCase();
+  const u = (baseUnit || "").trim().toLowerCase();
+
+  // Extract number + unit from variant string
+  const match = v.match(/^([\d.]+)\s*(g|kg|ml|l|litre|liter|piece|pieces|pcs|pc|dozen|pack|packet)?s?$/i);
+  if (!match) return 1;
+
+  const num  = parseFloat(match[1]);
+  const unit = (match[2] || "").toLowerCase();
+
+  // Weight: base is "per kg" or "per 1kg"
+  if (u.includes("kg") || u.includes("gram")) {
+    if (unit === "kg")  return num;
+    if (unit === "g")   return num / 1000;
+  }
+  // Volume: base is "per litre" or "per liter" or "per l"
+  if (u.includes("litr") || u.includes("liter") || u === "per l" || u.includes("/l")) {
+    if (unit === "l" || unit === "litre" || unit === "liter") return num;
+    if (unit === "ml") return num / 1000;
+  }
+  // Piece / pack — treat as quantity multiplier
+  if (u.includes("piece") || u.includes("pcs") || u.includes("pc") || u.includes("dozen") || u.includes("pack")) {
+    return num;
+  }
+  // Generic: if variant number alone vs base number
+  return num > 0 ? num : 1;
+}
+
+function selectVariant(productId, vi) {
+  const wrap = document.getElementById(`variants-${productId}`);
+  if (!wrap) return;
+
+  // Highlight selected chip
+  const chips = wrap.querySelectorAll('.qty-chip');
+  chips.forEach((c, idx) => c.classList.toggle('selected', idx === vi));
+
+  // Recalculate price based on variant
+  const product = allProducts.find(p => String(p.id) === String(productId));
+  if (!product) return;
+
+  const variantLabel = chips[vi] ? chips[vi].textContent.trim() : "";
+  const multiplier   = parseVariantMultiplier(variantLabel, product.unit);
+  const basePrice    = parseFloat(product.price);
+  const baseMrp      = parseFloat(product.mrp) || 0;
+  const variantPrice = Math.round(basePrice * multiplier * 100) / 100; // round to 2dp
+  const variantMrp   = baseMrp > 0 ? Math.round(baseMrp * multiplier * 100) / 100 : 0;
+
+  // Update the price display element for this product
+  const priceEl = document.getElementById(`price-display-${productId}`);
+  if (priceEl) {
+    const hasMrp = variantMrp > variantPrice;
+    const disc   = hasMrp ? Math.round((1 - variantPrice / variantMrp) * 100) : 0;
+    priceEl.innerHTML = hasMrp
+      ? `₹${variantPrice} <span class="price-mrp">₹${variantMrp}</span> <span class="price-discount">↓${disc}% OFF</span>`
+      : `₹${variantPrice} <span>/ ${variantLabel || product.unit || 'unit'}</span>`;
+  }
+
+  // Store the computed price on the chip for addToCart to read
+  wrap.dataset.variantPrice = variantPrice;
+  wrap.dataset.variantMrp   = variantMrp;
+  wrap.dataset.variantLabel  = variantLabel;
+}
+
+function changeLocalQty(id, delta) {
+  const el = document.getElementById(`qty-${id}`);
+  let val = parseInt(el.textContent) + delta;
+  if (val < 0) val = 0;
+  el.textContent = val;
+}
+
+function addToCart(id) {
+  const product = allProducts.find(p => String(p.id) == String(id));
+  const qtyEl = document.getElementById(`qty-${id}`);
+  const qty = parseInt(qtyEl.textContent);
+  if (qty == 0) { alert("Please select quantity first! / ముందుగా పరిమాణం ఎంచుకోండి!"); return; }
+  if (!product) { alert("Item not found. Please refresh the page. / పేజీని రిఫ్రెష్ చేయండి."); return; }
+
+  // Read variant-adjusted price from dataset (set by selectVariant)
+  const variantWrap  = document.getElementById(`variants-${id}`);
+  let effectivePrice = parseFloat(product.price);
+  let variantLabel   = "";
+  if (variantWrap) {
+    const dp = parseFloat(variantWrap.dataset.variantPrice);
+    if (!isNaN(dp) && dp > 0) effectivePrice = dp;
+    variantLabel = variantWrap.dataset.variantLabel || "";
+  }
+
+  cart[String(id)] = { ...product, id: String(id), price: effectivePrice, qty, variantLabel };
+  updateCartUI();
+  const btn = document.getElementById(`addbtn-${id}`);
+  btn.textContent = '✅ Added / జోడించబడింది';
+  btn.classList.add('added');
+}
+
+function updateCartUI() {
+  const total = Object.values(cart).reduce((s, i) => s + i.price * i.qty, 0);
+  const count = Object.values(cart).reduce((s, i) => s + i.qty, 0);
+  document.getElementById("cartCount").textContent = count;
+  const fab = document.getElementById("cartFab");
+  if (count > 0) fab.classList.add("visible"); else fab.classList.remove("visible");
+}
+
+function openCart() {
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("cartDrawer").classList.add("open");
+  renderCartDrawer();
+}
+
+function closeCart() {
+  document.getElementById("overlay").classList.remove("open");
+  document.getElementById("cartDrawer").classList.remove("open");
+}
+
+function renderCartDrawer() {
+  const items = Object.values(cart);
+  const list = document.getElementById("cartItemsList");
+  const formSec = document.getElementById("orderFormSection");
+  const totalDiv = document.getElementById("cartTotal");
+
+  if (!items.length) {
+    list.innerHTML = `<div class="empty-cart"><div class="emoji">🛒</div><div>Your cart is empty<br><span class="telugu">మీ కార్ట్ ఖాళీగా ఉంది</span></div></div>`;
+    formSec.style.display = "none";
+    totalDiv.style.display = "none";
+    return;
+  }
+
+  list.innerHTML = items.map(item => {
+    const imgHtml = item.imageUrl
+      ? `<img src="${item.imageUrl}" style="width:38px;height:38px;border-radius:8px;object-fit:cover;border:1px solid var(--border);" onerror="this.outerHTML='<span style=font-size:24px>${item.emoji||'🛒'}</span>'">`
+      : `<span style="font-size:26px;">${item.emoji || '🛒'}</span>`;
+    const variantTag = item.variantLabel ? `<span style="font-size:11px;background:var(--saffron-glow);color:var(--saffron);padding:1px 7px;border-radius:50px;font-weight:600;">${item.variantLabel}</span>` : '';
+    return `
+    <div class="cart-item">
+      <div class="cart-item-emoji">${imgHtml}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name} ${variantTag}</div>
+        <div class="cart-item-price">₹${item.price} × ${item.qty} = ₹${item.price * item.qty}</div>
+      </div>
+      <div class="cart-item-controls">
+        <button class="ci-btn ci-minus" onclick="changeCartQty('${item.id}', -1)">−</button>
+        <span class="ci-qty">${item.qty}</span>
+        <button class="ci-btn ci-plus" onclick="changeCartQty('${item.id}', 1)">+</button>
+        <button class="ci-del" onclick="removeFromCart('${item.id}')">🗑️</button>
+      </div>
+    </div>
+  `}).join('');
+
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+  document.getElementById("totalAmount").textContent = `₹${total}`;
+  totalDiv.style.display = "flex";
+  formSec.style.display = "block";
+}
+
+function changeCartQty(id, delta) {
+  const sid = String(id);
+  if (!cart[sid]) return;
+  cart[sid].qty += delta;
+  if (cart[sid].qty <= 0) { delete cart[sid]; }
+  updateCartUI();
+  renderCartDrawer();
+  const qtyEl = document.getElementById(`qty-${sid}`);
+  const btn = document.getElementById(`addbtn-${sid}`);
+  if (qtyEl) qtyEl.textContent = cart[sid] ? cart[sid].qty : 0;
+  if (btn) {
+    if (cart[sid]) { btn.textContent = '✅ Added / జోడించబడింది'; btn.classList.add('added'); }
+    else { btn.textContent = '+ Add to Cart / కార్ట్ కు జోడించు'; btn.classList.remove('added'); }
+  }
+}
+
+function removeFromCart(id) {
+  const sid = String(id);
+  delete cart[sid];
+  updateCartUI();
+  renderCartDrawer();
+  const qtyEl = document.getElementById(`qty-${sid}`);
+  const btn = document.getElementById(`addbtn-${sid}`);
+  if (qtyEl) qtyEl.textContent = 0;
+  if (btn) { btn.textContent = '+ Add to Cart / కార్ట్ కు జోడించు'; btn.classList.remove('added'); }
+}
+
+async function placeOrder() {
+  const name = document.getElementById("custName").value.trim();
+  const phone = document.getElementById("custPhone").value.trim();
+  const address = document.getElementById("custAddress").value.trim();
+  const notes = document.getElementById("custNotes").value.trim();
+
+  if (!name) { alert("Please enter your name! / మీ పేరు నమోదు చేయండి!"); return; }
+  if (!phone || phone.length !== 10) { alert("Please enter a valid 10-digit phone number! / సరైన 10-అంకెల ఫోన్ నంబర్ నమోదు చేయండి!"); return; }
+  if (!address) { alert("Please enter delivery address! / డెలివరీ చిరునామా నమోదు చేయండి!"); return; }
+
+  const btn = document.getElementById("placeOrderBtn");
+  btn.disabled = true;
+  btn.textContent = "Placing order... ఆర్డర్ పెడుతున్నాం...";
+
+  const orderData = {
+    action: "placeOrder",
+    customer: { name, phone, address, notes },
+    items: Object.values(cart).map(i => ({
+      id: i.id,
+      name: i.variantLabel ? `${i.name} (${i.variantLabel})` : i.name,
+      qty: i.qty,
+      price: i.price,
+      total: i.price * i.qty
+    })),
+    totalAmount: Object.values(cart).reduce((s, i) => s + i.price * i.qty, 0),
+    timestamp: new Date().toISOString()
+  };
+
+  if (APPS_SCRIPT_URL == "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
+    // Demo: just show success
+    setTimeout(() => showSuccess(), 1000);
+    return;
+  }
+
+  try {
+    // Send as base64 encoded GET request — same method as admin.html
+    // This avoids CORS issues and works reliably with Apps Script
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(orderData))));
+    const res = await fetch(
+      `${APPS_SCRIPT_URL}?d=${encodeURIComponent(encoded)}`,
+      { redirect: "follow" }
+    );
+    const result = await res.json();
+    if (result.success) {
+      showSuccess();
+    } else {
+      throw new Error(result.error || "unknown");
+    }
+  } catch(e) {
+    alert("Order failed. Please try again. / ఆర్డర్ విఫలమైంది. మళ్ళీ ప్రయత్నించండి.");
+    btn.disabled = false;
+    btn.textContent = "✅ Place Order / ఆర్డర్ పెట్టండి";
+  }
+}
+
+function showSuccess() {
+  document.getElementById("cartContent").style.display = "none";
+  document.getElementById("successScreen").classList.add("show");
+}
+
+function newOrder() {
+  cart = {};
+  updateCartUI();
+  renderProducts(allProducts);
+  document.getElementById("cartContent").style.display = "block";
+  document.getElementById("successScreen").classList.remove("show");
+  document.getElementById("custName").value = "";
+  document.getElementById("custPhone").value = "";
+  document.getElementById("custAddress").value = "";
+  document.getElementById("custNotes").value = "";
+  closeCart();
+}
+
+// ── Banner ───────────────────────────────────────────────────
+async function fetchBanner() {
+  try {
+    let bannerData = null;
+    if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
+      // Demo: try localStorage
+      const local = JSON.parse(localStorage.getItem("kiranaBanner") || "{}");
+      bannerData = local;
+    } else {
+      const res = await fetch(`${APPS_SCRIPT_URL}?action=getBanner&t=${Date.now()}`, { redirect: "follow" });
+      bannerData = await res.json();
+    }
+    if (bannerData && bannerData.banner && bannerData.active !== false) {
+      document.getElementById("banner-content").textContent = bannerData.banner;
+      document.getElementById("shopBanner").classList.add("visible");
+    }
+  } catch(e) {
+    // Banner fetch failed silently — shop still works
+  }
+}
+
+// Init
+fetchProducts();
+fetchBanner();
+</script>
+</body>
+</html>
