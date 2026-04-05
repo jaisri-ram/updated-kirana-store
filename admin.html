@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Grocery Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Noto+Sans+Telugu:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron: #FF6B00; --saffron-light: #FF8C3A; --saffron-glow: rgba(255,107,0,0.1);
+    --green: #2E7D32; --red: #C62828; --blue: #1565C0;
+    --cream: #FFF8F0; --border: #E8D8C8; --text-dark: #1A1208;
+    --text-soft: #8D6E63; --card-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:#F5F5F5; color:var(--text-dark); }
+
+  header {
+    background: linear-gradient(135deg,#1A237E,#283593);
+    color:white; padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .header-title { font-family:'Baloo 2',cursive; font-size:20px; font-weight:800; }
+  .header-sub { font-size:12px; opacity:0.7; margin-top:2px; }
+  .admin-badge { background:rgba(255,255,255,0.15); padding:6px 14px; border-radius:50px; font-size:13px; }
+
+  .tabs {
+    display:flex; background:white;
+    border-bottom: 2px solid var(--border);
+    overflow-x:auto; scrollbar-width:none;
+  }
+  .tab {
+    padding:14px 20px; font-weight:600; font-size:14px;
+    cursor:pointer; white-space:nowrap; border-bottom:3px solid transparent;
+    transition:all 0.2s; color:var(--text-soft);
+    margin-bottom:-2px;
+  }
+  .tab.active { color:var(--saffron); border-bottom-color:var(--saffron); }
+
+  .tab-content { display:none; padding:16px; }
+  .tab-content.active { display:block; }
+
+  /* ITEMS PANEL */
+  .panel-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:16px; gap:10px; flex-wrap:wrap;
+  }
+  .panel-title { font-family:'Baloo 2',cursive; font-size:18px; font-weight:700; }
+  .add-btn-top {
+    background:var(--saffron); color:white; border:none;
+    padding:10px 18px; border-radius:10px;
+    font-family:'Baloo 2',cursive; font-size:14px; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+
+  .search-input {
+    padding: 11px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    transition: border 0.2s;
+    background: #FAFAFA;
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--saffron); }
+
+  /* Item search specifically */
+  #itemSearchInput { width: 100%; margin-bottom: 12px; }
+
+  .item-card {
+    background:white; border-radius:14px; padding:14px 16px;
+    margin-bottom:10px; box-shadow:var(--card-shadow);
+    display:flex; align-items:center; gap:14px;
+    border-left:4px solid var(--saffron);
+  }
+  .item-emoji { font-size:32px; }
+  .item-info { flex:1; }
+  .item-name { font-weight:700; font-size:15px; }
+  .item-name-tel { font-family:'Noto Sans Telugu',sans-serif; font-size:12px; color:var(--text-soft); }
+  .item-meta { font-size:12px; color:var(--text-soft); margin-top:2px; }
+  .item-price { font-family:'Baloo 2',cursive; font-size:18px; font-weight:800; color:var(--saffron); }
+  .item-cat { font-size:11px; background:var(--saffron-glow); color:var(--saffron); padding:2px 8px; border-radius:50px; display:inline-block; margin-top:4px; }
+  .item-actions { display:flex; flex-direction:column; gap:6px; }
+  .edit-btn, .del-btn {
+    padding:7px 14px; border-radius:8px; border:none;
+    cursor:pointer; font-size:13px; font-weight:600;
+  }
+  .edit-btn { background:#E3F2FD; color:var(--blue); }
+  .del-btn { background:#FFEBEE; color:var(--red); }
+
+  /* MODAL */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000;
+    display:none; align-items:center; justify-content:center; padding:16px;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:white; border-radius:20px; width:100%; max-width:500px;
+    max-height:90vh; overflow-y:auto; padding:24px;
+  }
+  .modal-title { font-family:'Baloo 2',cursive; font-size:20px; font-weight:800; margin-bottom:20px; }
+  .form-group { margin-bottom:14px; }
+  .form-label { display:block; font-size:12px; font-weight:600; color:var(--text-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.5px; }
+  .form-input, .form-select {
+    width:100%; padding:11px 14px; border:2px solid var(--border);
+    border-radius:10px; font-size:14px; font-family:'DM Sans',sans-serif;
+    outline:none; transition:border 0.2s; background:#FAFAFA;
+  }
+  .form-input:focus, .form-select:focus { border-color:var(--saffron); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+  .save-btn {
+    flex:1; padding:13px; background:var(--saffron); color:white;
+    border:none; border-radius:12px; font-family:'Baloo 2',cursive;
+    font-size:16px; font-weight:700; cursor:pointer;
+  }
+  .cancel-btn {
+    padding:13px 20px; background:#f5f5f5; border:none; border-radius:12px;
+    font-size:14px; font-weight:600; cursor:pointer; color:var(--text-soft);
+  }
+
+  /* ORDERS */
+  .order-card {
+    background:white; border-radius:14px; padding:16px;
+    margin-bottom:12px; box-shadow:var(--card-shadow);
+  }
+  .order-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .order-id { font-family:'Baloo 2',cursive; font-size:14px; font-weight:700; color:var(--text-soft); }
+  .order-time { font-size:11px; color:var(--text-soft); }
+  .order-status {
+    padding:4px 12px; border-radius:50px; font-size:12px; font-weight:600;
+  }
+  .status-new { background:#E8F5E9; color:#2E7D32; }
+  .status-done { background:#E3F2FD; color:#1565C0; }
+  .customer-info { margin-bottom:10px; }
+  .customer-name { font-weight:700; font-size:15px; }
+  .customer-phone { font-size:13px; color:var(--saffron); font-weight:600; }
+  .customer-address { font-size:12px; color:var(--text-soft); margin-top:3px; line-height:1.4; }
+  .order-items-list { border-top:1px solid var(--border); padding-top:10px; margin-top:10px; }
+  .order-line { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+  .order-total { display:flex; justify-content:space-between; font-weight:700; font-size:16px; margin-top:8px; padding-top:8px; border-top:2px solid var(--border); }
+  .order-total-amount { font-family:'Baloo 2',cursive; color:var(--saffron); font-size:18px; }
+  .mark-done-btn {
+    margin-top:12px; width:100%; padding:10px;
+    background:#E8F5E9; color:var(--green); border:none; border-radius:10px;
+    font-weight:600; font-size:14px; cursor:pointer;
+  }
+  .mark-done-btn:hover { background:var(--green); color:white; }
+
+  .loading-orders { text-align:center; padding:40px; color:var(--text-soft); font-size:14px; }
+  .no-orders { text-align:center; padding:40px; color:var(--text-soft); font-size:14px; }
+
+  .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+  .stat-card { background:white; border-radius:12px; padding:14px; text-align:center; box-shadow:var(--card-shadow); }
+  .stat-num { font-family:'Baloo 2',cursive; font-size:24px; font-weight:800; color:var(--saffron); }
+  .stat-label { font-size:11px; color:var(--text-soft); margin-top:2px; }
+
+  /* LOGIN SCREEN */
+  .login-screen {
+    position:fixed; inset:0; background:linear-gradient(135deg,#1A237E,#283593);
+    display:flex; align-items:center; justify-content:center;
+    z-index:9999; padding:24px;
+  }
+  .login-box {
+    background:white; border-radius:24px; padding:32px 28px;
+    width:100%; max-width:380px; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  }
+  .login-icon { font-size:52px; margin-bottom:8px; }
+  .login-title { font-family:'Baloo 2',cursive; font-size:24px; font-weight:800; color:#1A237E; }
+  .login-sub { font-size:13px; color:var(--text-soft); margin-top:4px; margin-bottom:24px; }
+  .login-input {
+    width:100%; padding:14px 16px; border:2px solid var(--border);
+    border-radius:12px; font-size:16px; font-family:'DM Sans',sans-serif;
+    outline:none; transition:border 0.2s; background:var(--cream);
+    text-align:center; letter-spacing:3px; margin-bottom:12px;
+  }
+  .login-input:focus { border-color:#1A237E; }
+  .login-btn {
+    width:100%; padding:14px; background:linear-gradient(135deg,#1A237E,#283593);
+    color:white; border:none; border-radius:12px;
+    font-family:'Baloo 2',cursive; font-size:18px; font-weight:700;
+    cursor:pointer; transition:all 0.2s;
+    box-shadow:0 4px 16px rgba(26,35,126,0.3);
+  }
+  .login-btn:hover { box-shadow:0 6px 24px rgba(26,35,126,0.45); transform:translateY(-1px); }
+  .login-error {
+    background:#FFEBEE; color:#C62828; padding:10px 14px;
+    border-radius:10px; font-size:13px; font-weight:600;
+    margin-bottom:12px; display:none;
+  }
+  .login-error.show { display:block; }
+  .logout-btn {
+    background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+    color:white; padding:6px 14px; border-radius:50px;
+    font-size:12px; font-weight:600; cursor:pointer;
+  }
+  .logout-btn:hover { background:rgba(255,255,255,0.25); }
+  .admin-header-right { display:flex; align-items:center; gap:10px; }
+
+  /* SETTINGS MODAL */
+  .settings-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.55);
+    z-index:2000; display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .settings-overlay.open { display:flex; }
+  .settings-modal {
+    background:white; border-radius:20px; width:100%; max-width:420px;
+    padding:24px; box-shadow:0 20px 60px rgba(0,0,0,0.25); max-height:90vh; overflow-y:auto;
+  }
+  .settings-header {
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;
+  }
+  .settings-title { font-family:'Baloo 2',cursive; font-size:20px; font-weight:800; color:#1A237E; }
+  .settings-close {
+    background:#f0f0f0; border:none; border-radius:50%; width:32px; height:32px;
+    font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .settings-section { margin-bottom:20px; }
+  .settings-section-title {
+    font-size:12px; font-weight:700; color:var(--text-soft);
+    text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px;
+    padding-bottom:6px; border-bottom:1px solid var(--border);
+  }
+  .settings-input {
+    width:100%; padding:11px 14px; border:2px solid var(--border);
+    border-radius:10px; font-size:14px; font-family:'DM Sans',sans-serif;
+    outline:none; transition:border 0.2s; background:#FAFAFA; margin-bottom:8px;
+  }
+  .settings-input:focus { border-color:#1A237E; }
+  .settings-input.pwd-input { letter-spacing:2px; }
+  .settings-btn {
+    width:100%; padding:12px; border:none; border-radius:10px;
+    font-family:'Baloo 2',cursive; font-size:15px; font-weight:700;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .settings-btn-blue { background:linear-gradient(135deg,#1A237E,#283593); color:white; }
+  .settings-btn-green { background:linear-gradient(135deg,#2E7D32,#43A047); color:white; margin-top:4px; }
+  .settings-msg {
+    display:none; padding:9px 12px; border-radius:8px;
+    font-size:13px; font-weight:600; margin-bottom:8px;
+  }
+  .settings-msg.success { background:#E8F5E9; color:#2E7D32; display:block; }
+  .settings-msg.error   { background:#FFEBEE; color:#C62828; display:block; }
+  .settings-note { font-size:11px; color:var(--text-soft); margin-top:6px; line-height:1.5; }
+  .settings-icon-btn {
+    background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+    color:white; padding:7px 13px; border-radius:50px;
+    font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;
+  }
+  .settings-icon-btn:hover { background:rgba(255,255,255,0.28); }
+
+  /* Orders filter row */
+  .orders-filter-row {
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px;
+  }
+  .orders-filter-row .search-input { flex:1; min-width:160px; }
+</style>
+</head>
+<body>
+
+<!-- SETTINGS MODAL -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-modal">
+    <div class="settings-header">
+      <div class="settings-title">⚙️ Settings</div>
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <!-- Banner Message -->
+    <div class="settings-section">
+      <div class="settings-section-title">📢 Shop Banner Message</div>
+      <div class="settings-msg" id="bannerMsg"></div>
+      <textarea class="settings-input" id="bannerTextInput" rows="3"
+        placeholder="e.g. 🎉 Grand Sale! 20% off on all orders above ₹500 this weekend only!"
+        style="resize:vertical;min-height:80px;letter-spacing:normal;"></textarea>
+      <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="bannerActiveCheck" checked style="width:16px;height:16px;accent-color:var(--saffron);">
+        <span>Show banner on shop page</span>
+      </label>
+      <button class="settings-btn settings-btn-green" onclick="saveBanner()">📢 Save Banner</button>
+      <p class="settings-note">Banner appears at the top of the shop page for all customers. Leave blank to hide it.</p>
+    </div>
+
+    <!-- Change Password -->
+    <div class="settings-section">
+      <div class="settings-section-title">🔑 Change Password</div>
+      <div class="settings-msg" id="pwdMsg"></div>
+      <input class="settings-input pwd-input" id="currentPwdInput" type="password" placeholder="Current password">
+      <input class="settings-input pwd-input" id="newPwdInput" type="password" placeholder="New password (min 4 chars)">
+      <input class="settings-input pwd-input" id="confirmPwdInput" type="password" placeholder="Confirm new password">
+      <button class="settings-btn settings-btn-blue" onclick="changePassword()">🔑 Update Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">Admin Login</div>
+    <div class="login-sub">Jai Sri Ram Grocery Store<br>Enter password to continue</div>
+    <div class="login-error" id="loginError">❌ Wrong password! Try again.</div>
+    <input class="login-input" id="passwordInput" type="password"
+      placeholder="Enter Password"
+      onkeydown="if(event.key==='Enter') checkLogin()">
+    <button class="login-btn" onclick="checkLogin()">🔓 Login</button>
+  </div>
+</div>
+
+<header>
+  <div>
+    <div class="header-title">🏪 Admin Panel</div>
+    <div class="header-sub">Jai Sri Ram Grocery Store</div>
+  </div>
+  <div class="admin-header-right">
+    <button class="settings-icon-btn" onclick="openSettings()">⚙️ Settings</button>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('items')">📦 Items</div>
+  <div class="tab" onclick="switchTab('orders')">🛒 Orders</div>
+</div>
+
+<!-- ═══════════════ ITEMS TAB ═══════════════ -->
+<div class="tab-content active" id="tab-items">
+  <!-- Search bar spanning full width -->
+  <input class="search-input" id="itemSearchInput" type="text"
+    placeholder="🔍 Search by name, category, price, unit..."
+    oninput="applyItemFilter()">
+
+  <div class="panel-header">
+    <div class="panel-title">Product Items</div>
+    <button class="add-btn-top" onclick="openAddModal()">+ Add Item</button>
+  </div>
+  <div id="itemsList"><div class="loading-orders">Loading items...</div></div>
+</div>
+
+<!-- ═══════════════ ORDERS TAB ═══════════════ -->
+<div class="tab-content" id="tab-orders">
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Orders</div></div>
+    <div class="stat-card"><div class="stat-num" id="statNew">0</div><div class="stat-label">New Orders</div></div>
+    <div class="stat-card"><div class="stat-num" id="statRevenue">₹0</div><div class="stat-label">Total Revenue</div></div>
+  </div>
+
+  <div class="panel-header">
+    <div class="panel-title">Incoming Orders</div>
+    <button class="add-btn-top" onclick="loadOrders()" style="background:#1565C0">🔄 Refresh</button>
+  </div>
+
+  <div class="orders-filter-row">
+    <input class="search-input" id="searchInput" type="text"
+      placeholder="Search by Order ID, Name, Phone, Amount, Status..."
+      oninput="applyOrderFilters()" style="flex:2;min-width:200px;">
+
+    <select class="search-input" id="dateFilter" style="flex:1;min-width:140px;" onchange="applyOrderFilters()">
+      <option value="">All Dates</option>
+      <option value="today">Today</option>
+      <option value="yesterday">Yesterday</option>
+      <option value="currentWeek">Current Week</option>
+      <option value="lastWeek">Last Week</option>
+      <option value="currentMonth">Current Month</option>
+      <option value="lastMonth">Last Month</option>
+      <option value="custom">Custom Range</option>
+    </select>
+
+    <input type="date" id="fromDate" class="search-input"
+      style="flex:1;min-width:130px;display:none" onchange="applyOrderFilters()">
+    <input type="date" id="toDate" class="search-input"
+      style="flex:1;min-width:130px;display:none" onchange="applyOrderFilters()">
+  </div>
+
+  <div id="ordersList"><div class="loading-orders">Click Refresh to load orders...</div></div>
+</div>
+
+<!-- ═══════════════ ADD / EDIT MODAL ═══════════════ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">➕ Add New Item</div>
+    <input type="hidden" id="editId">
+
+    <div class="form-group">
+      <label class="form-label">Item Name (English) *</label>
+      <input class="form-input" id="fName" placeholder="e.g. Basmati Rice">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Item Name (Telugu) తెలుగు పేరు</label>
+      <input class="form-input" id="fNameTel" placeholder="e.g. బాస్మతి బియ్యం">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <input class="form-input" id="fCat" list="catList" placeholder="e.g. Grains">
+      <datalist id="catList">
+        <option value="Grains"><option value="Pulses"><option value="Spices">
+        <option value="Oils"><option value="Essentials"><option value="Snacks">
+        <option value="Dairy"><option value="Beverages">
+      </datalist>
+    </div>
+
+    <!-- ── Image Section ── -->
+    <div class="form-group">
+      <label class="form-label">Product Image</label>
+      <div style="border:2px dashed var(--border);border-radius:12px;padding:14px;background:#FAFAFA;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px;">
+          <span style="background:var(--saffron);color:white;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap;">
+            📁 Upload Image
+          </span>
+          <span style="font-size:12px;color:var(--text-soft);">JPG, PNG, WEBP — auto compressed to 128×128 ≤20KB</span>
+          <input type="file" id="fImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+        </label>
+        <!-- Size / quality hint -->
+        <div id="imgSizeHint" style="font-size:11px;color:#2E7D32;margin-bottom:4px;font-weight:600;"></div>
+        <!-- Preview -->
+        <div id="imagePreviewWrap" style="display:none;text-align:center;margin-top:8px;">
+          <img id="imagePreview" src=""
+            style="max-height:90px;max-width:100%;border-radius:8px;object-fit:cover;border:1px solid var(--border);">
+          <button type="button" onclick="clearImage()"
+            style="display:block;margin:6px auto 0;background:none;border:none;color:#C62828;font-size:12px;cursor:pointer;">
+            ✕ Remove
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">MRP Price (₹)</label>
+        <input class="form-input" id="fMrp" type="number" placeholder="100">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Offer Price (₹) *</label>
+        <input class="form-input" id="fPrice" type="number" placeholder="85">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Quantity Options (shown to customer)</label>
+      <div style="font-size:12px;color:var(--text-soft);margin-bottom:8px;">
+        Enter comma-separated values the customer can choose from
+      </div>
+      <input class="form-input" id="fQtyOptions" placeholder="e.g. 200g, 500g, 1kg  or  1 piece, 2 pieces">
+      <div style="font-size:11px;color:var(--text-soft);margin-top:5px;">
+        Leave blank to use the Unit field for display only (no selection needed)
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Unit / Display Label</label>
+      <input class="form-input" id="fUnit" list="unitList" placeholder="per kg">
+      <datalist id="unitList">
+        <option value="per kg"><option value="per gram"><option value="per litre">
+        <option value="per 100g"><option value="per 250g"><option value="per 500g">
+        <option value="per piece"><option value="per dozen"><option value="per packet">
+      </datalist>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+      <button class="save-btn" onclick="saveItem()">💾 Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+
+// ============================================================
+// ✏️  OWNER: Paste your Apps Script URL here
+// ============================================================
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVsJX5ZOgLcPSE09tUj1oQ3YYfSSqW8P8W03itJ5df2-XzcEx5HeXco_HsHbDsZZ7u/exec";
+// ============================================================
+const APPS_SCRIPT_PLACEHOLDER = "https://script.google.com/macros/s......";
+const DEFAULT_PASSWORD = "kirana123";
+
+let uploadedImageBase64 = "";  // holds compressed base64 of newly selected image
+let adminProducts = [];
+let adminOrders = [];
+let allOrders = [];
+let editingId = null;
+
+// ── DEMO DATA (used when no URL configured) ──────────────────
+const DEMO_PRODUCTS = [
+  {id:"1",name:"Basmati Rice",nameTel:"బాస్మతి బియ్యం",category:"Grains",price:85,mrp:100,unit:"per kg",imageUrl:"",qtyOptions:"500g, 1kg, 2kg"},
+  {id:"2",name:"Toor Dal",nameTel:"కందిపప్పు",category:"Pulses",price:120,mrp:130,unit:"per kg",imageUrl:"",qtyOptions:"250g, 500g, 1kg"},
+  {id:"3",name:"Sunflower Oil",nameTel:"పొద్దుతిరుగుడు నూనె",category:"Oils",price:130,mrp:145,unit:"per litre",imageUrl:"",qtyOptions:"500ml, 1L, 2L"},
+  {id:"4",name:"Sugar",nameTel:"చక్కెర",category:"Essentials",price:45,mrp:"",unit:"per kg",imageUrl:"",qtyOptions:""},
+  {id:"5",name:"Salt",nameTel:"ఉప్పు",category:"Essentials",price:20,mrp:"",unit:"per kg",imageUrl:"",qtyOptions:""},
+];
+
+const DEMO_ORDERS = [
+  {orderId:"ORD-001",timestamp:"20/03/2026, 10:30:00",customerName:"Ravi Kumar",phone:"9876543210",address:"12-34, Gandhi Nagar, Hyderabad",notes:"Please deliver before 7pm",items:"Rice x2 = ₹170, Dal x1 = ₹130",totalAmount:300,status:"New"},
+  {orderId:"ORD-002",timestamp:"20/03/2026, 11:15:00",customerName:"Sunita Devi",phone:"8765432109",address:"5-6, MG Road, Secunderabad",notes:"",items:"Sugar x1 = ₹45, Salt x2 = ₹40",totalAmount:85,status:"Delivered"},
+];
+
+// ── URL / Session helpers ────────────────────────────────────
+function getAdminUrl() {
+  return localStorage.getItem("kiranaAdminUrl") || SCRIPT_URL || "";
+}
+function getSessionToken() {
+  return sessionStorage.getItem("kiranaSessionPwd") || "";
+}
+function isConfigured() {
+  const u = getAdminUrl();
+  return u && u !== APPS_SCRIPT_PLACEHOLDER;
+}
+
+// ── HTTP helpers ─────────────────────────────────────────────
+// async function securePost(params) {
+//   const url = getAdminUrl();
+//   if (!isConfigured()) return { error: "not_configured" };
+//   try {
+//     const payload = { ...params, _ts: Date.now() };
+//     const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+//     const res = await fetch(`${url}?d=${encodeURIComponent(encoded)}`, { redirect: "follow" });
+//     const text = await res.text();
+//     try { return JSON.parse(text); }
+//     catch(e) { return { error: "bad_response", raw: text.substring(0, 200) }; }
+//   } catch(e) { return { error: "network", message: e.message }; }
+// }
+
+async function securePost(params) {
+  const url = getAdminUrl();
+  if (!isConfigured()) return { error: "not_configured" };
+  try {
+    const payload = { ...params, _ts: Date.now() };
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+
+    // If payload is large (image upload), send as POST body
+    // Otherwise send as GET query param (works better with Apps Script CORS)
+    const isLarge = encoded.length > 6000;
+
+    let res;
+    if (isLarge) {
+      // POST with body — no URL length limit
+      res = await fetch(url, {
+        method: "POST",
+        redirect: "follow",
+        headers: { "Content-Type": "text/plain" },  // must be text/plain for Apps Script
+        body: JSON.stringify({ d: encoded })
+      });
+    } else {
+      // GET with query param — standard path
+      res = await fetch(`${url}?d=${encodeURIComponent(encoded)}`, {
+        redirect: "follow"
+      });
+    }
+
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch(e) { return { error: "bad_response", raw: text.substring(0, 200) }; }
+  } catch(e) { return { error: "network", message: e.message }; }
+}
+
+async function publicGet(action) {
+  const url = getAdminUrl();
+  if (!isConfigured()) return { error: "not_configured" };
+  try {
+    const res = await fetch(`${url}?action=${action}&t=${Date.now()}`, { redirect: "follow" });
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch(e) { return { error: "bad_response", raw: text.substring(0, 200) }; }
+  } catch(e) { return { error: "network", message: e.message }; }
+}
+
+// All authenticated admin calls — token added automatically
+async function adminCall(params) {
+  return await securePost({ ...params, token: getSessionToken() });
+}
+
+// ── Password verification ────────────────────────────────────
+async function verifyPasswordWithSheet(inputPwd) {
+  if (!isConfigured()) return inputPwd === DEFAULT_PASSWORD;
+  try {
+    const data = await securePost({ action: "verifyPassword", password: inputPwd });
+    if (data.error === "not_configured" || data.error === "network") {
+      return inputPwd === DEFAULT_PASSWORD;
+    }
+    return data.valid === true;
+  } catch(e) {
+    return inputPwd === DEFAULT_PASSWORD;
+  }
+}
+
+async function checkLogin() {
+  const input = document.getElementById("passwordInput").value;
+  const errEl = document.getElementById("loginError");
+  const btn = document.querySelector(".login-btn");
+  if (!input) { errEl.classList.add("show"); setTimeout(() => errEl.classList.remove("show"), 2000); return; }
+  btn.textContent = "Checking...";
+  btn.disabled = true;
+  const isValid = await verifyPasswordWithSheet(input);
+  btn.textContent = "🔓 Login";
+  btn.disabled = false;
+  if (isValid) {
+    sessionStorage.setItem("kiranaLoggedIn", "yes");
+    sessionStorage.setItem("kiranaSessionPwd", input);
+    document.getElementById("loginScreen").style.display = "none";
+    loadItems();
+  } else {
+    errEl.classList.add("show");
+    document.getElementById("passwordInput").value = "";
+    document.getElementById("passwordInput").focus();
+    setTimeout(() => errEl.classList.remove("show"), 3000);
+  }
+}
+
+function logout() {
+  if (confirm("Logout from admin panel?")) {
+    sessionStorage.removeItem("kiranaLoggedIn");
+    sessionStorage.removeItem("kiranaSessionPwd");
+    location.reload();
+  }
+}
+
+// ── Settings ─────────────────────────────────────────────────
+function openSettings() {
+  ["currentPwdInput","newPwdInput","confirmPwdInput"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  ["pwdMsg","bannerMsg"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = "settings-msg"; el.textContent = ""; }
+  });
+  document.getElementById("settingsOverlay").classList.add("open");
+  loadBannerIntoSettings();
+}
+
+function closeSettings() {
+  document.getElementById("settingsOverlay").classList.remove("open");
+}
+
+function showSettingsMsg(elId, text, type) {
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.className = "settings-msg " + type;
+  if (type === "success") setTimeout(() => { el.className = "settings-msg"; el.textContent = ""; }, 4000);
+}
+
+async function saveBanner() {
+  const banner = document.getElementById("bannerTextInput").value.trim();
+  const active = document.getElementById("bannerActiveCheck").checked;
+  showSettingsMsg("bannerMsg", "⏳ Saving banner...", "success");
+  if (!isConfigured()) {
+    localStorage.setItem("kiranaBanner", JSON.stringify({ banner, active }));
+    showSettingsMsg("bannerMsg", "✅ Banner saved (demo mode)!", "success");
+    return;
+  }
+  try {
+    const result = await adminCall({ action: "setBanner", banner, active });
+    if (result.success) {
+      showSettingsMsg("bannerMsg", "✅ Banner saved! Customers will see it on the shop page.", "success");
+    } else {
+      showSettingsMsg("bannerMsg", "❌ Could not save: " + (result.error || "unknown"), "error");
+    }
+  } catch(e) {
+    showSettingsMsg("bannerMsg", "❌ Network error: " + e.message, "error");
+  }
+}
+
+async function loadBannerIntoSettings() {
+  if (!isConfigured()) {
+    try {
+      const local = JSON.parse(localStorage.getItem("kiranaBanner") || "{}");
+      document.getElementById("bannerTextInput").value = local.banner || "";
+      document.getElementById("bannerActiveCheck").checked = local.active !== false;
+    } catch(e) {}
+    return;
+  }
+  try {
+    const res = await fetch(`${getAdminUrl()}?action=getBanner&t=${Date.now()}`, { redirect: "follow" });
+    const data = await res.json();
+    document.getElementById("bannerTextInput").value = data.banner || "";
+    document.getElementById("bannerActiveCheck").checked = data.active !== false;
+  } catch(e) {}
+}
+
+async function changePassword() {
+  const currentPwd = document.getElementById("currentPwdInput").value.trim();
+  const newPwd     = document.getElementById("newPwdInput").value.trim();
+  const confirmPwd = document.getElementById("confirmPwdInput").value.trim();
+
+  if (!currentPwd) { showSettingsMsg("pwdMsg","❌ Enter your current password!","error"); return; }
+  if (!newPwd || newPwd.length < 4) { showSettingsMsg("pwdMsg","❌ New password must be at least 4 characters!","error"); return; }
+  if (newPwd !== confirmPwd) { showSettingsMsg("pwdMsg","❌ New passwords do not match!","error"); return; }
+  if (currentPwd === newPwd) { showSettingsMsg("pwdMsg","❌ New password must be different from current!","error"); return; }
+
+  showSettingsMsg("pwdMsg","⏳ Verifying current password...","success");
+  const isCurrentValid = await verifyPasswordWithSheet(currentPwd);
+  if (!isCurrentValid) {
+    showSettingsMsg("pwdMsg","❌ Current password is wrong!","error");
+    document.getElementById("currentPwdInput").value = "";
+    return;
+  }
+  if (!isConfigured()) {
+    showSettingsMsg("pwdMsg","⚠️ Apps Script URL not set. Cannot save to Sheet yet.","error");
+    return;
+  }
+  try {
+    const result = await adminCall({ action: "updateAdminPassword", newPassword: newPwd });
+    if (result.error === "Unauthorized") {
+      showSettingsMsg("pwdMsg","❌ Unauthorized. Please logout and login again.","error");
+      return;
+    }
+    sessionStorage.setItem("kiranaSessionPwd", newPwd);
+    showSettingsMsg("pwdMsg","✅ Password updated!","success");
+    ["currentPwdInput","newPwdInput","confirmPwdInput"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+  } catch(e) {
+    showSettingsMsg("pwdMsg","⚠️ Network error: " + e.message,"error");
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", () => {
+  if (SCRIPT_URL && SCRIPT_URL !== APPS_SCRIPT_PLACEHOLDER) {
+    localStorage.setItem("kiranaAdminUrl", SCRIPT_URL);
+  }
+  if (sessionStorage.getItem("kiranaLoggedIn") === "yes") {
+    document.getElementById("loginScreen").style.display = "none";
+    loadItems();
+  } else {
+    setTimeout(() => {
+      const p = document.getElementById("passwordInput");
+      if (p) p.focus();
+    }, 300);
+  }
+});
+
+// ── Tab switching ────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const tabs = ['items','orders'];
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (tab === 'items') loadItems();
+  if (tab === 'orders') loadOrders();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ITEMS — Load, Filter, Render
+// ══════════════════════════════════════════════════════════════
+
+async function loadItems() {
+  document.getElementById("itemsList").innerHTML = "<div class='loading-orders'>⏳ Loading items...</div>";
+  if (!isConfigured()) {
+    adminProducts = DEMO_PRODUCTS;
+    renderItems();
+    return;
+  }
+  try {
+    const data = await publicGet('getProducts');
+    adminProducts = data.products || [];
+    renderItems();
+  } catch(e) {
+    document.getElementById("itemsList").innerHTML =
+      "<div class='loading-orders'>⚠️ Connection failed. Check your Apps Script URL.</div>";
+  }
+}
+
+// Filter products by search query and re-render
+function applyItemFilter() {
+  const q = document.getElementById("itemSearchInput").value.toLowerCase().trim();
+  const filtered = adminProducts.filter(p =>
+    !q ||
+    String(p.name).toLowerCase().includes(q) ||
+    String(p.nameTel).toLowerCase().includes(q) ||
+    String(p.category).toLowerCase().includes(q) ||
+    String(p.price).includes(q) ||
+    String(p.mrp || "").includes(q) ||
+    String(p.unit).toLowerCase().includes(q) ||
+    String(p.qtyOptions || "").toLowerCase().includes(q)
+  );
+  renderFilteredItems(filtered);
+}
+
+// Render the full list (clears filter)
+function renderItems() {
+  const el = document.getElementById("itemsList");
+  if (!adminProducts.length) {
+    el.innerHTML = "<div class='no-orders'>No items yet. Add your first item! / వస్తువులు లేవు.</div>";
+    return;
+  }
+  // Re-apply current search if any text is typed
+  const q = document.getElementById("itemSearchInput")?.value?.trim();
+  if (q) {
+    applyItemFilter();
+  } else {
+    renderFilteredItems(adminProducts);
+  }
+}
+
+function renderFilteredItems(products) {
+  const el = document.getElementById("itemsList");
+  if (!products.length) {
+    el.innerHTML = "<div class='no-orders'>No items match your search.</div>";
+    return;
+  }
+  el.innerHTML = products.map(p => {
+    // Image: base64 or URL in imageUrl column, or placeholder
+    const imgSrc = p.imageUrl || "";
+    const imgHtml = imgSrc
+      ? `<img src="${imgSrc}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;border:1px solid var(--border);" onerror="this.style.display='none'">`
+      : `<div style="width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,#FFF3E0,#FFE0B2);display:flex;align-items:center;justify-content:center;font-size:28px;">🛒</div>`;
+
+    const mrpHtml = p.mrp && parseFloat(p.mrp) > parseFloat(p.price)
+      ? `<span style="font-size:11px;text-decoration:line-through;color:var(--text-soft);margin-right:4px;">₹${p.mrp}</span>` : '';
+    const discountHtml = p.mrp && parseFloat(p.mrp) > parseFloat(p.price)
+      ? `<span style="font-size:10px;background:#E8F5E9;color:#2E7D32;padding:1px 6px;border-radius:50px;font-weight:700;">${Math.round((1 - p.price / p.mrp) * 100)}% OFF</span>` : '';
+    const qtyHtml = p.qtyOptions
+      ? `<div style="font-size:11px;color:var(--text-soft);margin-top:2px;">Options: ${p.qtyOptions}</div>` : '';
+
+    return `
+    <div class="item-card">
+      ${imgHtml}
+      <div class="item-info">
+        <div class="item-name">${p.name}</div>
+        ${p.nameTel ? `<div class="item-name-tel">${p.nameTel}</div>` : ''}
+        <div class="item-meta">${p.unit || ''}</div>
+        ${qtyHtml}
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+          ${mrpHtml}
+          <span class="item-price">₹${p.price}</span>
+          ${discountHtml}
+        </div>
+        <div><span class="item-cat">${p.category || 'General'}</span></div>
+      </div>
+      <div class="item-actions">
+        <button class="edit-btn" onclick="openEditModal('${p.id}')">✏️ Edit</button>
+        <button class="del-btn" onclick="deleteItem('${p.id}')">🗑️ Del</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  IMAGE HANDLING — compress to 128×128, ≤20KB
+// ══════════════════════════════════════════════════════════════
+
+function handleImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 200;
+      canvas.height = 200;
+      const ctx = canvas.getContext("2d");
+
+      // Cover-crop: scale so shortest side = 200, then centre-crop
+      const scale = Math.max(200 / img.width, 200 / img.height);
+      const sw = 200 / scale;
+      const sh = 200 / scale;
+      const sx = (img.width - sw) / 2;
+      const sy = (img.height - sh) / 2;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 200, 200);
+
+      // Auto-compress: reduce quality until base64 fits in ~20KB
+      // base64 encoded size ≈ binary size × 1.37
+      const TARGET_BYTES = 20 * 1024;        // 20 KB binary target
+      const TARGET_B64   = TARGET_BYTES * 1.37; // ~27 KB base64
+
+      let quality = 0.85;
+      let base64 = canvas.toDataURL("image/jpeg", quality);
+
+      while (base64.length > TARGET_B64 && quality > 0.05) {
+        quality = Math.round((quality - 0.05) * 100) / 100;
+        base64 = canvas.toDataURL("image/jpeg", quality);
+      }
+
+      uploadedImageBase64 = base64;
+
+      // Approximate actual KB of the base64 string stored in the sheet cell
+      const sizeKB = Math.round(base64.length * 0.75 / 1024);
+      document.getElementById("imgSizeHint").textContent =
+        `✅ 128×128 — ~${sizeKB} KB  (quality: ${Math.round(quality * 100)}%)`;
+
+      document.getElementById("imagePreview").src = base64;
+      document.getElementById("imagePreviewWrap").style.display = "block";
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage() {
+  uploadedImageBase64 = "";
+  document.getElementById("imagePreview").src = "";
+  document.getElementById("imagePreviewWrap").style.display = "none";
+  document.getElementById("imgSizeHint").textContent = "";
+  const fi = document.getElementById("fImageFile");
+  if (fi) fi.value = "";
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MODAL — open / close
+// ══════════════════════════════════════════════════════════════
+
+function openAddModal() {
+  editingId = null;
+  window._pendingNewId = null;
+  document.getElementById("modalTitle").textContent = "➕ Add New Item";
+  ["fName","fNameTel","fCat","fPrice","fMrp","fUnit","fQtyOptions"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  clearImage();
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function openEditModal(id) {
+  editingId = id;
+  window._pendingNewId = null;
+  const p = adminProducts.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById("modalTitle").textContent = "✏️ Edit Item";
+  document.getElementById("fName").value      = p.name       || "";
+  document.getElementById("fNameTel").value   = p.nameTel    || "";
+  document.getElementById("fCat").value       = p.category   || "";
+  document.getElementById("fPrice").value     = p.price      || "";
+  document.getElementById("fMrp").value       = p.mrp        || "";
+  document.getElementById("fUnit").value      = p.unit       || "";
+  document.getElementById("fQtyOptions").value = p.qtyOptions || "";
+  clearImage();
+  // Show existing image preview if present
+  if (p.imageUrl) {
+    document.getElementById("imagePreview").src = p.imageUrl;
+    document.getElementById("imagePreviewWrap").style.display = "block";
+    document.getElementById("imgSizeHint").textContent = "Current image (upload new to replace)";
+  }
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+  uploadedImageBase64 = "";
+  window._pendingNewId = null;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SAVE ITEM — Step 1: image base64 → Step 2: other details
+// ══════════════════════════════════════════════════════════════
+
+async function saveItem() {
+  const name  = document.getElementById("fName").value.trim();
+  const price = document.getElementById("fPrice").value.trim();
+  if (!name || !price) { alert("Name and price are required!"); return; }
+
+  const saveBtn = document.querySelector(".save-btn");
+  saveBtn.textContent = "⏳ Saving...";
+  saveBtn.disabled = true;
+
+  try {
+    // ── STEP 1: Save image base64 to imageUrl column (only if new image chosen) ──
+    if (uploadedImageBase64) {
+      saveBtn.textContent = "⏳ Saving image...";
+
+      // For new items we generate the ID here so both calls use the same one
+      const tempId = editingId || ("P" + Date.now());
+      if (!editingId) window._pendingNewId = tempId;
+
+      const imgAction = editingId ? "updateProductImage" : "addProductImage";
+      const imgResult = await adminCall({
+        action: imgAction,
+        id: tempId,
+        imageBase64: uploadedImageBase64
+      });
+
+      if (!imgResult || !imgResult.success) {
+        alert("❌ Image save failed: " + (imgResult?.error || "unknown"));
+        saveBtn.textContent = "💾 Save Item";
+        saveBtn.disabled = false;
+        return;
+      }
+    }
+
+    // ── STEP 2: Save all other details — imageUrl column is NOT touched ──
+    saveBtn.textContent = "⏳ Saving details...";
+
+    const itemId = editingId || window._pendingNewId || ("P" + Date.now());
+    const detailAction = editingId ? "updateProductDetails" : "addProductDetails";
+
+    const itemData = {
+      action:     detailAction,
+      id:         itemId,
+      name,
+      nameTel:    document.getElementById("fNameTel").value.trim(),
+      category:   document.getElementById("fCat").value.trim()        || "General",
+      price:      parseFloat(price),
+      mrp:        document.getElementById("fMrp").value.trim()        || "",
+      unit:       document.getElementById("fUnit").value.trim()       || "per unit",
+      qtyOptions: document.getElementById("fQtyOptions").value.trim() || ""
+      // ✅ No imageBase64 / imageUrl here — image column untouched in step 2
+    };
+
+    const result = await adminCall(itemData);
+
+    if (result && result.success) {
+      alert("✅ Item saved successfully!");
+      uploadedImageBase64 = "";
+      window._pendingNewId = null;
+      clearImage();
+      closeModal();
+      loadItems();
+    } else {
+      alert("❌ Details save failed: " + (result?.error || "Unknown error"));
+    }
+
+  } catch(err) {
+    alert("❌ Network error: " + err.message);
+  }
+
+  saveBtn.textContent = "💾 Save Item";
+  saveBtn.disabled = false;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DELETE ITEM
+// ══════════════════════════════════════════════════════════════
+
+async function deleteItem(id) {
+  if (!confirm("Delete this item? / ఈ వస్తువు తొలగించాలా?")) return;
+  if (!isConfigured()) {
+    adminProducts = adminProducts.filter(p => p.id !== id);
+    renderItems();
+    return;
+  }
+  try {
+    const result = await adminCall({ action: "deleteProduct", id });
+    if (result && result.error === "Unauthorized") {
+      alert("❌ Unauthorized. Please logout and login again.");
+      return;
+    }
+    loadItems();
+  } catch(e) { alert("Delete failed: " + e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ORDERS — Load, Filter, Render
+// ══════════════════════════════════════════════════════════════
+
+function parseOrderDate(ts) {
+  if (!ts) return null;
+  const datePart = ts.split(",")[0];
+  const parts = datePart.split("/").map(Number);
+  let d, m, y;
+  if (parts[0] > 12) { [d, m, y] = parts; }
+  else               { [m, d, y] = parts; }
+  return new Date(y, m - 1, d);
+}
+
+function startOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - day + 1);
+  return d;
+}
+function endOfWeek(date) {
+  const d = startOfWeek(date);
+  d.setDate(d.getDate() + 6);
+  return d;
+}
+
+function isSameMonth(tsString) {
+  if (!tsString) return false;
+  const today = new Date();
+  const datePart = tsString.split(",")[0];
+  const parts = datePart.split("/").map(Number);
+  let month, year;
+  if (parts[0] > 12) { month = parts[1]; year = parts[2]; }
+  else               { month = parts[0]; year = parts[2]; }
+  return month == (today.getMonth() + 1) && year == today.getFullYear();
+}
+
+async function loadOrders() {
+  if (!isConfigured()) {
+    adminOrders = DEMO_ORDERS;
+    allOrders = DEMO_ORDERS;
+    renderOrders();
+    return;
+  }
+  document.getElementById("ordersList").innerHTML = "<div class='loading-orders'>⏳ Loading orders...</div>";
+  try {
+    const data = await adminCall({ action: "getOrders" });
+    if (data.error === "Unauthorized") {
+      document.getElementById("ordersList").innerHTML =
+        "<div class='loading-orders'>🔒 Unauthorized. Please logout and login again.</div>";
+      return;
+    }
+    adminOrders = (data.orders || []).map(o => ({
+      orderId:      o.orderId      || o.orderid      || o["Order ID"] || "",
+      timestamp:    o.timestamp    || o.Timestamp    || o.time        || "",
+      customerName: o.customerName || o.CustomerName || o.Name        || o.name || "",
+      phone:        o.phone        || o.Phone        || o.mobile      || "",
+      address:      o.address      || o.Address      || "",
+      notes:        o.notes        || o.Notes        || "",
+      items:        o.items        || o.Items        || "",
+      totalAmount:  o.totalAmount  || o.TotalAmount  || o.total       || 0,
+      status:       o.status       || o.Status       || "New",
+    }));
+    allOrders = adminOrders;
+    renderOrders();
+  } catch(e) {
+    document.getElementById("ordersList").innerHTML =
+      `<div class='loading-orders'>⚠️ Could not load orders.<br><small>${e.message}</small></div>`;
+  }
+}
+
+function applyOrderFilters() {
+  const q        = document.getElementById("searchInput").value.toLowerCase();
+  const dateType = document.getElementById("dateFilter").value;
+  const fromInput = document.getElementById("fromDate");
+  const toInput   = document.getElementById("toDate");
+
+  fromInput.style.display = dateType === "custom" ? "inline-block" : "none";
+  toInput.style.display   = dateType === "custom" ? "inline-block" : "none";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let fromDate = null, toDate = null;
+  switch (dateType) {
+    case "today":        fromDate = toDate = new Date(today); break;
+    case "yesterday":    { const y = new Date(today); y.setDate(y.getDate()-1); fromDate = toDate = y; } break;
+    case "currentWeek":  fromDate = startOfWeek(new Date()); toDate = endOfWeek(new Date()); break;
+    case "lastWeek":     { const lw = new Date(); lw.setDate(lw.getDate()-7); fromDate = startOfWeek(lw); toDate = endOfWeek(lw); } break;
+    case "currentMonth": fromDate = new Date(today.getFullYear(), today.getMonth(), 1);   toDate = new Date(today.getFullYear(), today.getMonth()+1, 0); break;
+    case "lastMonth":    fromDate = new Date(today.getFullYear(), today.getMonth()-1, 1); toDate = new Date(today.getFullYear(), today.getMonth(), 0);   break;
+    case "custom":
+      if (fromInput.value) fromDate = new Date(fromInput.value);
+      if (toInput.value)   toDate   = new Date(toInput.value);
+      break;
+  }
+
+  adminOrders = allOrders.filter(o => {
+    const matchesText =
+      !q ||
+      String(o.orderId).toLowerCase().includes(q) ||
+      String(o.customerName).toLowerCase().includes(q) ||
+      String(o.address).toLowerCase().includes(q) ||
+      String(o.phone).includes(q) ||
+      String(o.totalAmount).includes(q) ||
+      String(o.status).toLowerCase().includes(q);
+
+    const orderDate = parseOrderDate(o.timestamp);
+    let matchesDate = true;
+    if (fromDate && orderDate) matchesDate = matchesDate && orderDate >= fromDate;
+    if (toDate   && orderDate) matchesDate = matchesDate && orderDate <= toDate;
+
+    return matchesText && matchesDate;
+  });
+  renderOrders();
+}
+
+function renderOrders() {
+  const el = document.getElementById("ordersList");
+  const newOrders = adminOrders.filter(o => String(o.status).trim() === "New");
+  const revenue   = adminOrders.reduce((s, o) => s + (parseFloat(o.totalAmount) || 0), 0);
+
+  document.getElementById("statTotal").textContent   = adminOrders.length;
+  document.getElementById("statNew").textContent     = newOrders.length;
+  document.getElementById("statRevenue").textContent = `₹${revenue.toFixed(0)}`;
+
+  if (!adminOrders.length) {
+    el.innerHTML = "<div class='no-orders'>No orders yet!</div>";
+    return;
+  }
+
+  el.innerHTML = [...adminOrders].reverse().map((o, idx) => `
+    <div class="order-card" id="order-card-${idx}">
+      <div class="order-header">
+        <div>
+          <div class="order-id">#${o.orderId}</div>
+          <div class="order-time">${o.timestamp}</div>
+        </div>
+        <span class="order-status ${o.status === 'New' ? 'status-new' : 'status-done'}">${o.status}</span>
+      </div>
+      <div class="customer-info">
+        <div class="customer-name">👤 ${o.customerName}</div>
+        <div class="customer-phone">📞 ${o.phone}</div>
+        <div class="customer-address">📍 ${o.address}</div>
+        ${o.notes ? `<div style="font-size:12px;color:var(--text-soft);margin-top:3px">💬 ${o.notes}</div>` : ''}
+      </div>
+      <div class="order-items-list">
+        <div style="font-size:12px;font-weight:600;color:var(--text-soft);margin-bottom:6px">ITEMS</div>
+        ${(o.items || "").split(", ").map(i =>
+          `<div class="order-line">
+            <span>${i.split("=")[0]}</span>
+            <span style="font-weight:600">${i.split("=")[1] || ""}</span>
+          </div>`
+        ).join('')}
+        <div class="order-total">
+          <span>Total</span>
+          <span class="order-total-amount">₹${o.totalAmount}</span>
+        </div>
+      </div>
+      ${o.status === "New"
+        ? `<button class="mark-done-btn" onclick="markDelivered('${o.orderId}',${idx})">✅ Mark as Delivered</button>`
+        : ''}
+    </div>
+  `).join('');
+}
+
+async function markDelivered(orderId, idx) {
+  const btn = document.querySelector(`#order-card-${idx} .mark-done-btn`);
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Saving..."; }
+
+  if (!isConfigured()) {
+    adminOrders.forEach(o => { if (o.orderId === orderId) o.status = "Delivered"; });
+    allOrders.forEach(o => { if (o.orderId === orderId) o.status = "Delivered"; });
+    renderOrders();
+    return;
+  }
+  try {
+    const result = await adminCall({ action: "markDelivered", orderId });
+    if (result.success) {
+      adminOrders.forEach(o => { if (o.orderId === orderId) o.status = "Delivered"; });
+      allOrders.forEach(o => { if (o.orderId === orderId) o.status = "Delivered"; });
+      renderOrders();
+    } else {
+      alert("Could not update order: " + (result.error || "unknown error"));
+      if (btn) { btn.disabled = false; btn.textContent = "✅ Mark as Delivered"; }
+    }
+  } catch(e) {
+    alert("Network error. Please try again.");
+    if (btn) { btn.disabled = false; btn.textContent = "✅ Mark as Delivered"; }
+  }
+}
+
+</script>
+</body>
+</html>
