@@ -877,6 +877,22 @@ function renderProducts(items) {
   });
 }
 
+  function parseBaseUnit(unitStr) {
+    const u = unitStr.toLowerCase().trim();
+
+    // per kg / per litre
+    if (u.includes("per kg")) return { qty: 1000, unit: "g" };
+    if (u.includes("per litre") || u.includes("per liter")) return { qty: 1000, unit: "ml" };
+
+    // per 100g / per 100ml
+    const match = u.match(/per\s*(\d+)\s*(g|ml)/);
+    if (match) {
+        return { qty: parseFloat(match[1]), unit: match[2] };
+    }
+
+    return null;
+}
+
 /**
  * Parse a variant string like "500g", "1kg", "250ml", "2L", "1 piece"
  * and return a multiplier relative to the product's base unit.
@@ -914,7 +930,42 @@ function parseVariantMultiplier(variantStr, baseUnit) {
   return num > 0 ? num : 1;
 }
 
-function selectVariant(productId, vi) {
+// function selectVariant(productId, vi) {
+//   const wrap = document.getElementById(`variants-${productId}`);
+//   if (!wrap) return;
+
+//   // Highlight selected chip
+//   const chips = wrap.querySelectorAll('.qty-chip');
+//   chips.forEach((c, idx) => c.classList.toggle('selected', idx === vi));
+
+//   // Recalculate price based on variant
+//   const product = allProducts.find(p => String(p.id) === String(productId));
+//   if (!product) return;
+
+//   const variantLabel = chips[vi] ? chips[vi].textContent.trim() : "";
+//   const multiplier   = parseVariantMultiplier(variantLabel, product.unit);
+//   const basePrice    = parseFloat(product.price);
+//   const baseMrp      = parseFloat(product.mrp) || 0;
+//   const variantPrice = Math.round(basePrice * multiplier * 100) / 100; // round to 2dp
+//   const variantMrp   = baseMrp > 0 ? Math.round(baseMrp * multiplier * 100) / 100 : 0;
+
+//   // Update the price display element for this product
+//   const priceEl = document.getElementById(`price-display-${productId}`);
+//   if (priceEl) {
+//     const hasMrp = variantMrp > variantPrice;
+//     const disc   = hasMrp ? Math.round((1 - variantPrice / variantMrp) * 100) : 0;
+//     priceEl.innerHTML = hasMrp
+//       ? `₹${variantPrice} <span class="price-mrp">₹${variantMrp}</span> <span class="price-discount">↓${disc}% OFF</span>`
+//       : `₹${variantPrice} <span>/ ${variantLabel || product.unit || 'unit'}</span>`;
+//   }
+
+//   // Store the computed price on the chip for addToCart to read
+//   wrap.dataset.variantPrice = variantPrice;
+//   wrap.dataset.variantMrp   = variantMrp;
+//   wrap.dataset.variantLabel  = variantLabel;
+// }
+
+  function selectVariant(productId, vi) {
   const wrap = document.getElementById(`variants-${productId}`);
   if (!wrap) return;
 
@@ -922,33 +973,57 @@ function selectVariant(productId, vi) {
   const chips = wrap.querySelectorAll('.qty-chip');
   chips.forEach((c, idx) => c.classList.toggle('selected', idx === vi));
 
-  // Recalculate price based on variant
   const product = allProducts.find(p => String(p.id) === String(productId));
   if (!product) return;
 
-  const variantLabel = chips[vi] ? chips[vi].textContent.trim() : "";
-  const multiplier   = parseVariantMultiplier(variantLabel, product.unit);
-  const basePrice    = parseFloat(product.price);
-  const baseMrp      = parseFloat(product.mrp) || 0;
-  const variantPrice = Math.round(basePrice * multiplier * 100) / 100; // round to 2dp
-  const variantMrp   = baseMrp > 0 ? Math.round(baseMrp * multiplier * 100) / 100 : 0;
+  const variantLabel = chips[vi]?.textContent.trim() || "";
+  const basePrice = parseFloat(product.price);
 
-  // Update the price display element for this product
+  let variantPrice = basePrice;
+  let variantMrp = product.mrp ? parseFloat(product.mrp) : 0;
+
+  // ✅ Parse base unit (kg, g, litre, ml)
+  const baseUnit = parseBaseUnit(product.unit);
+
+  if (baseUnit) {
+    // Parse variant quantity
+    const m = variantLabel.toLowerCase().match(/([\d.]+)\s*(g|kg|ml|l)/);
+    if (m) {
+      let qty = parseFloat(m[1]);
+      let unit = m[2];
+
+      // Normalize variant → base unit
+      if (unit === "kg") qty *= 1000;
+      if (unit === "l") qty *= 1000;
+
+      variantPrice = (qty / baseUnit.qty) * basePrice;
+      if (variantMrp) {
+        variantMrp = (qty / baseUnit.qty) * variantMrp;
+      }
+    }
+  }
+
+  variantPrice = Math.round(variantPrice * 100) / 100;
+  variantMrp = Math.round(variantMrp * 100) / 100;
+
+  // Update UI
   const priceEl = document.getElementById(`price-display-${productId}`);
   if (priceEl) {
     const hasMrp = variantMrp > variantPrice;
-    const disc   = hasMrp ? Math.round((1 - variantPrice / variantMrp) * 100) : 0;
+    const disc = hasMrp ? Math.round((1 - variantPrice / variantMrp) * 100) : 0;
+
     priceEl.innerHTML = hasMrp
-      ? `₹${variantPrice} <span class="price-mrp">₹${variantMrp}</span> <span class="price-discount">↓${disc}% OFF</span>`
-      : `₹${variantPrice} <span>/ ${variantLabel || product.unit || 'unit'}</span>`;
+      ? `₹${variantPrice} <span class="price-mrp">₹${variantMrp}</span>
+         <span class="price-discount">↓${disc}% OFF</span>`
+      : `₹${variantPrice} <span>/ ${variantLabel}</span>`;
   }
 
-  // Store the computed price on the chip for addToCart to read
+  // Store for cart
   wrap.dataset.variantPrice = variantPrice;
-  wrap.dataset.variantMrp   = variantMrp;
-  wrap.dataset.variantLabel  = variantLabel;
+  wrap.dataset.variantMrp = variantMrp;
+  wrap.dataset.variantLabel = variantLabel;
 }
-
+  
 function changeLocalQty(id, delta) {
   const el = document.getElementById(`qty-${id}`);
   let val = parseInt(el.textContent) + delta;
