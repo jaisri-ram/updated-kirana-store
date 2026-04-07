@@ -1161,7 +1161,7 @@ async function placeOrder() {
     customer: { name, phone, address, notes },
     items: Object.values(cart).map(i => ({
       id: i.id,
-      name: i.variantLabel ? `${i.name} - ${i.nameTel} (${i.variantLabel})` : i.name - i.nameTel,
+      name: i.variantLabel ? `${i.name} - ${i.nameTel} (${i.variantLabel})` : `${i.name} - ${i.nameTel} (${i.unit})`,
       qty: i.qty,
       price: i.price,
       total: i.price * i.qty
